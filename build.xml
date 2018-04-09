@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="AllBuild">
+
+	<property file="Ant_Properties.properties" />
+
+	<record name="log.txt" action="start" />
+
+	<property name="RW_DIR" value="${user.dir}\RW" />
+	<property name="R2_DIR" value="${user.dir}\R2" />
+	<property name="SQL_DIR" value="${user.dir}\R2\Mantra\Sqls" />
+	<property name="JAVA_BUILD" value="${user.dir}\JAVA_BUILD" />
+	<property name="SQL_BUILD" value="${user.dir}\SQL_BUILD" />
+
+	<echo message="R2 Project  : ${R2Project}" />
+	<echo message="RW Project  : ${RWProject}" />
+	<echo message="JDK Path    : ${JDKExecutable}" />
+	<echo message="User Dir    : ${user.dir}" />
+	<echo message="RW Dir      : ${RW_DIR}" />
+	<echo message="R2 Dir      : ${R2_DIR}" />
+	<echo message="SQL Dir     : ${SQL_DIR}" />
+	<echo message="Java Build  : ${JAVA_BUILD}" />
+	<echo message="SQL Build   : ${SQL_BUILD}" />
+	<echo message="Custom Lib  : ${user.dir}\lib" />
+	
+	<!-- Define a macro that will be used to Checkout changes from svn -->
+	<macrodef name="svnco">
+		<attribute name="srcdir" />
+		<attribute name="destdir" />
+			<sequential>
+
+				<echo message="SVN Checkout from @{srcdir} to @{destdir}" />
+
+				<exec executable="cmd" failonerror="true" >
+					<arg value="/c" />
+					<arg value="svn" />
+					<arg value="co" />
+					<arg value="@{srcdir}" />
+					<arg value="@{destdir}" />
+				</exec>
+
+			</sequential>
+	</macrodef>
+
+	<target name="PROMPT_FOR_BUILD">
+		<echo message="Choose required Build option to proceed" />
+		<echo message="1.All Build" />
+		<echo message="2.Java Build" />
+		<echo message="3.Sql Build" />
+		<echo message="4.Exit" />
+		
+		<input message="Enter the option: " validargs="1,2,3,4" addproperty="BuildOption"/>
+
+		<condition property="all.build">
+			<equals arg1="1" arg2="${BuildOption}"/>
+		</condition>
+
+		<condition property="java.build">
+			<equals arg1="2" arg2="${BuildOption}"/>
+		</condition>
+
+		<condition property="sql.build">
+			<equals arg1="3" arg2="${BuildOption}"/>
+		</condition>
+		
+		<fail message="#### BUILD EXIT ####">
+			<condition>
+				<equals arg1="4" arg2="${BuildOption}"/>
+			</condition>
+		</fail>
+
+	</target>
+
+	<target name="Deleting_Folders" depends="PROMPT_FOR_BUILD">
+
+		<echo message="#### Clear BUILD Space ####" />
+
+		<delete dir="${RW_DIR}" />
+		<delete dir="${R2_DIR}" />
+
+		<mkdir dir="${RW_DIR}" />
+		<mkdir dir="${R2_DIR}" />
+		
+	</target>
+
+	<target name="Taking_Files_from_SVN"  depends="Deleting_Folders">
+
+		<parallel>
+			<svnco srcdir="${R2Project}" destdir="${R2_DIR}" />
+			<svnco srcdir="${RWProject}" destdir="${RW_DIR}" />
+		</parallel>
+
+	</target>
+
+	<target name="SQLBuild"  depends="Taking_Files_from_SVN" if="${sql.build}">
+
+		<echo message="Starting SQL Build..." />
+
+		<ant antfile="${user.dir}\buildsqls.xml"/>
+
+	</target>
+
+	<target name="JavaBuild"  depends="SQLBuild" if="${java.build}">
+
+		<echo message="Starting Java Build..." />
+
+		<ant antfile="${user.dir}\buildjava.xml"/>
+
+	</target>
+
+	<target name="AllBuild"  depends="JavaBuild" if="${all.build}">
+
+		<echo message="Starting Full Build" />
+
+		<parallel>
+			<ant antfile="${user.dir}\buildjava.xml" output="java.log"/>
+			<ant antfile="${user.dir}\buildsqls.xml" output="sql.log"/>
+		</parallel>
+
+	</target>
+
+</project>

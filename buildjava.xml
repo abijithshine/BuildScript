@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project default="Zipping_files">
+
+	<echo message="JDK Path    : ${JDKExecutable}" />
+	<echo message="User Dir    : ${user.dir}" />
+	<echo message="R2 Dir      : ${R2_DIR}" />
+	<echo message="RW Dir      : ${RW_DIR}" />
+	<echo message="Java Build  : ${JAVA_BUILD}" />
+	<echo message="Custom Lib  : ${user.dir}\lib" />
+
+	<target name="Create_Dir" >
+
+		<delete dir="${JAVA_BUILD}" />
+		<mkdir dir="${JAVA_BUILD}" />
+
+	</target>
+
+	<target name="MOVE_EXTN_OUT" depends="Create_Dir">
+
+		<copy todir="${JAVA_BUILD}\Screens" >
+		    <fileset dir="${R2_DIR}\Screens" />
+		</copy>
+
+		<move todir="${JAVA_BUILD}\ExtnTemp" >
+			<fileset dir="${JAVA_BUILD}\Screens\ExtnTemp" />
+		</move>
+
+	</target>
+
+	<target name="REMOVE_CUSTOM_SCREENS" depends="MOVE_EXTN_OUT">
+		<exec executable="${user.dir}\R2CustomScreenCleanUp.bat" >
+			<arg value="${JAVA_BUILD}\Screens" />
+		</exec>
+	</target>
+
+	<target name="COMPILE_JAVA" depends="REMOVE_CUSTOM_SCREENS">
+
+		<echo message="Compile Roguewave" />
+
+		<javac srcdir="${RW_DIR}" executable="${JDKExecutable}\bin\javac"  debug="true" destdir="${JAVA_BUILD}" verbose="true" fork="true" includeAntRuntime="false" memoryInitialSize="100m" memoryMaximumSize="1256m">
+
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${user.dir}\lib">
+					<include name="**\*.jar" />
+				</fileset>
+			</classpath>
+
+		</javac>
+
+		<echo message="Compile Mantra" />
+
+		<javac srcdir="${R2_DIR}" executable="${JDKExecutable}\bin\javac"  debug="true" destdir="${JAVA_BUILD}" verbose="true" fork="true" includeAntRuntime="false" memoryInitialSize="100m" memoryMaximumSize="1256m">
+
+			<classpath>
+				<pathelement path="${classpath}" />
+				<fileset dir="${user.dir}\lib">
+					<include name="**\*.jar" />
+				</fileset>
+			</classpath>
+
+		</javac>
+
+		<!-- <rmic  base ="${R2_DIR}" includes="Mantra\PDBAccess\PDriver\*.class"  verify="true" includeAntRuntime="false"/> -->
+
+	</target>
+
+	<target name="Zipping_files" depends="COMPILE_JAVA">
+
+		<echo message="Zip Class Files as Mantra.zip" />
+
+		<zip destfile="${JAVA_BUILD}\Mantra.zip" basedir="${JAVA_BUILD}" includes="Mantra\**\*.class, com\**\*.class" update="false" />
+
+		<echo message="Zip Java Files as R2.zip" />
+
+		<zip destfile="${JAVA_BUILD}\R2.zip" update="false" >
+			<zipfileset dir="${R2_DIR}" includes="Mantra\**\*.java" />
+			<zipfileset dir="${RW_DIR}" includes="com\**\*.java" />
+		</zip>
+
+		<delete dir="${JAVA_BUILD}\Mantra" />
+		<delete dir="${JAVA_BUILD}\com" />
+
+	</target>
+
+</project>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="Zipping_files">
+
+	<property name="SQL_WC" value="${SQL_BUILD}\SQL_WC" />
+	<property name="CUSTOM" value="${SQL_BUILD}\Custom_scripts" />
+
+	<echo message="User Dir    : ${user.dir}" />
+	<echo message="SQL Dir     : ${SQL_DIR}" />
+	<echo message="SQL Build   : ${SQL_BUILD}" />
+	<echo message="SQL WC      : ${SQL_WC}" />
+	<echo message="CUSTOM SQL  : ${CUSTOM}" />
+
+
+	<target name="Create_Dir" >
+
+		<delete dir="${SQL_BUILD}" />
+		<mkdir dir="${SQL_BUILD}" />
+		<mkdir dir="${CUSTOM}" />
+
+	</target>
+
+	<target name="Copy_SQLS" depends="Create_Dir">
+
+		<copy todir="${SQL_WC}" >
+		    <fileset dir="${SQL_DIR}" />
+		</copy>
+
+	</target>
+
+	<target name="Wrap_SQLS" depends="Copy_SQLS">
+		<exec executable="${user.dir}\copysqls_dos.bat" >
+			<arg value="${SQL_BUILD}\SQL_WC" />
+			<arg value="${SQL_BUILD}" />
+		</exec>
+	</target>
+
+	<target name="Zipping_files" depends="Wrap_SQLS" >
+
+		<echo message="Zip SQL Files Include *.plb and *.sql" />
+
+		<zip destfile="${SQL_BUILD}\sqls.zip" includes="sqls\**\*.plb, sqls\**\*.sql"  update="false">
+			<zipfileset dir="${SQL_BUILD}\sqls" prefix="sqls\" />
+		</zip>
+
+		<echo message="Zip Custom scripts to ${CUSTOM}" />
+
+		<zip destfile="${CUSTOM}\AXIA_sqls.zip" includes="AXIA_sqls\**\*.*" update="false">
+			<zipfileset dir="${SQL_BUILD}\AXIA_sqls" prefix="AXIA_sqls\" />
+		</zip>
+
+		<zip destfile="${CUSTOM}\Bexel_ACCPAC_sqls.zip" includes="Bexel_ACCPAC_sqls\**\*.*" update="false">
+			<zipfileset dir="${SQL_BUILD}\Bexel_ACCPAC_sqls" prefix="Bexel_ACCPAC_sqls\" />
+		</zip>
+
+		<zip destfile="${CUSTOM}\sc_NAV_sqls.zip" includes="sc_NAV_sqls\**\*.*" update="false">
+			<zipfileset dir="${SQL_BUILD}\sc_NAV_sqls" prefix="sc_NAV_sqls\" />
+		</zip>
+
+		<zip destfile="${CUSTOM}\sc_sqls.zip" includes="sc_sqls\**\*.*" update="false">
+			<zipfileset dir="${SQL_BUILD}\sc_sqls" prefix="sc_sqls\" />
+		</zip>
+
+		<zip destfile="${CUSTOM}\Solotech_sqls.zip" includes="Solotech_sqls\**\*.*" update="false">
+			<zipfileset dir="${SQL_BUILD}\Solotech_sqls" prefix="Solotech_sqls\" />
+		</zip>
+
+		<zip destfile="${CUSTOM}\xlvideo_sqls.zip" includes="xlvideo_sqls\**\*.*" update="false">
+			<zipfileset dir="${SQL_BUILD}\xlvideo_sqls" prefix="xlvideo_sqls\" />
+		</zip>
+
+		<delete dir="${SQL_BUILD}\sqls" />
+		<delete dir="${SQL_BUILD}\AXIA_sqls" />
+		<delete dir="${SQL_BUILD}\Bexel_ACCPAC_sqls" />
+		<delete dir="${SQL_BUILD}\sc_NAV_sqls" />
+		<delete dir="${SQL_BUILD}\sc_sqls" />
+		<delete dir="${SQL_BUILD}\Solotech_sqls" />
+		<delete dir="${SQL_BUILD}\xlvideo_sqls" />
+
+	</target>
+
+</project>
